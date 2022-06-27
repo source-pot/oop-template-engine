@@ -6,7 +6,7 @@ use SourcePot\TemplateEngine\Template;
 
 try {
 
-    $t = new Template(__DIR__.'/template/demo.tpl');
+    $t = Template::loadFromFile(__DIR__.'/template/demo.tpl');
     $t->parse([
         'pageTitle' => 'Welcome',
         'sections' => [

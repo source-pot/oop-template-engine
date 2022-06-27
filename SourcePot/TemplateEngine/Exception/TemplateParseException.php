@@ -1,6 +1,6 @@
 <?php
 
-namespace SourePot\TemplateEngine\Exception;
+namespace SourcePot\TemplateEngine\Exception;
 
 use RuntimeException;
 
