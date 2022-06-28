@@ -16,4 +16,7 @@ Because who doesn't like a list of things to do
         - Try variable first, fallback to filename
 6. Support dot-notation arrays in foreach loops, e.g. `{{@foreach:some.nested.list:value}}` to use
     `$data['some']['nested']['list']` as the array
-    
+7. Add decision making.  `{{@if:truthyVariable}}` and `{{@endif:truthyVariable}}`
+8. Change end of foreach loop to `{{@endforeach:array}}` to match decision token
+9. Switch statement?  `{{@switch:variable}}` with `{{@case:value}}` where `variable === value`.
+    Use `{{@endcase}}` and `{{@endswitch}}` tokens to end those blocks
