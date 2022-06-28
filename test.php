@@ -10,12 +10,12 @@ try {
     TemplateEngine::setBaseDirectory(__DIR__.'/template/');
 
     // test just plain text
-    // $t = Template::loadFromFile('footer.tpl');
+    // $t = TemplateEngine::loadFromFile('footer.tpl');
     // echo $t->render();
     // echo "\n".str_repeat('-',40)."\n";
     
     // test simple variable replacement
-    // $t = Template::loadFromFile('header.tpl');
+    // $t = TemplateEngine::loadFromFile('header.tpl');
     // $t->parse([
     //     'pageTitle' => 'Dummy title'
     // ]);
@@ -23,7 +23,7 @@ try {
     // echo "\n".str_repeat('-',40)."\n";
 
     // test a loop
-    // $t = Template::loadFromFile('section.tpl');
+    // $t = TemplateEngine::loadFromFile('section.tpl');
     // $t->parse([
     //     'sections' => [
     //         [
@@ -42,7 +42,7 @@ try {
     // echo "\n".str_repeat('-',40)."\n";
 
     // more complicated template with include, loop, and variables
-    $t = Template::loadFromFile('demo.tpl');
+    $t = TemplateEngine::loadFromFile('demo.tpl');
     $t->parse([
         'pageTitle' => 'Welcome',
         'dummyText' => 'Lorum epson dell lenovo',

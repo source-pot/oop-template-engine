@@ -63,7 +63,7 @@ class Template implements ComponentInterface
 
             switch($token) {
                 case '@include':
-                    $template = Template::loadFromFile($params);
+                    $template = TemplateEngine::loadFromFile($params);
                     $this->components[] = $template;
                     $templateContents = substr($templateContents, $nextBlockStartPos);
                     continue 2; // while loop
@@ -100,28 +100,11 @@ class Template implements ComponentInterface
         }
     }
 
-    public static function loadFromFile(string $fileName): self
-    {
-        $fileName = TemplateEngine::baseDirectory() . $fileName;
-        if(!file_exists($fileName)) {
-            throw new FileNotFoundException($fileName);
-        }
-
-        return new self(file_get_contents($fileName));
-    }
-
     public function parse(array $data = []): self {
         foreach($this->components as $component) {
             $component->parse($data);
         }
         return $this;
-    }
-
-    protected function includeFile(string $fileName, array $data): void
-    {
-        $template = Template::loadFromFile($fileName);
-        $template->parse($data);
-        $this->compiledComponents[] = $template;
     }
 
     public function render(): string {

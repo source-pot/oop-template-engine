@@ -21,4 +21,14 @@ class TemplateEngine
     {
         return self::$baseDirectory;
     }
+
+    public static function loadFromFile(string $fileName): Template
+    {
+        $fileName = self::baseDirectory() . $fileName;
+        if(!file_exists($fileName)) {
+            throw new FileNotFoundException($fileName);
+        }
+
+        return new Template(file_get_contents($fileName));
+    }
 }
