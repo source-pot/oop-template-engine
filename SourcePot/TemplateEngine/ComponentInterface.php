@@ -2,8 +2,8 @@
 
 namespace SourcePot\TemplateEngine;
 
-interface TemplateSnippetInterface
+interface ComponentInterface
 {
-    public function parse(array $data = []): void;
+    public function parse(array $data = []): self;
     public function render(): string;
 }

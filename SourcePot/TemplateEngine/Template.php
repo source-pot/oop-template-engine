@@ -6,136 +6,127 @@ use SourcePot\TemplateEngine\Exception\FileNotFoundException;
 use SourcePot\TemplateEngine\Exception\TemplateParseException;
 use SourcePot\TemplateEngine\Exception\UnrecognisedDirectiveFoundException;
 
-class Template implements TemplateSnippetInterface
+class Template implements ComponentInterface
 {
-    private const DIRECTIVE_START = '{{';
-    private const DIRECTIVE_END = '}}';
-
-    protected string $baseDir = '';
-    private array $compiledComponents = [];
+    private string $templateContents;
+    private array $components = [];
 
     public function __construct(
-        private string $templateContents
-    ) { }
+        string $templateContents
+    ) {
+        $this->templateContents = $templateContents;
+        // check the incoming template contents and build a list of components
+        while(strlen($templateContents) > 0)
+        {
+            $tokenStartPos = strpos($templateContents, TemplateEngine::TOKEN_START);
+
+            if($tokenStartPos === false) {
+                // If we didn't find a token start, assume all that is left is plain text
+                $template = new TextComponent($templateContents);
+                $this->components[] = $template;
+                break;
+            }
+
+            if($tokenStartPos > 0) {
+                // If we found a token start not at the beginning of the string, everything before
+                // the token start is a text component
+                $template = new TextComponent(substr($templateContents, 0, $tokenStartPos));
+                $this->components[] = $template;
+                $templateContents = substr($templateContents, $tokenStartPos);
+                continue;
+            }
+
+            $tokenEndPos = strpos($templateContents, TemplateEngine::TOKEN_END, $tokenStartPos);
+
+            if($tokenEndPos === false) {
+                // If we didn't find the end of a token, this is a terminal error
+                throw new Exception\TemplateParseException('No end of token found');
+            }
+
+            $token = substr(
+                $templateContents,
+                $tokenStartPos + strlen(TemplateEngine::TOKEN_START),
+                $tokenEndPos - $tokenStartPos - strlen(TemplateEngine::TOKEN_START)
+            );
+
+            $nextBlockStartPos = $tokenEndPos + strlen(TemplateEngine::TOKEN_END);
+
+            if($token[0] !== '@') {
+                // Simple variable replacement is just {{variable}}
+                $template = new VariableComponent($token);
+                $this->components[] = $template;
+                $templateContents = substr($templateContents, $nextBlockStartPos);
+                continue;
+            }
+
+            [$token,$params] = explode(':',$token,2);
+
+            switch($token) {
+                case '@include':
+                    $template = Template::loadFromFile($params);
+                    $this->components[] = $template;
+                    $templateContents = substr($templateContents, $nextBlockStartPos);
+                    continue 2; // while loop
+                
+                case '@foreach':
+                    // This is a "block component" which means it has another corresponding token
+                    // somewhere later in the file.  We need to find that first
+                    [$iterableVariable, $instanceVariable] = explode(':',$params,2);
+                    $closingToken = TemplateEngine::TOKEN_START.'@foreach:'.$iterableVariable.TemplateEngine::TOKEN_END;
+                    $closingTokenStart = strpos($templateContents, $closingToken, $nextBlockStartPos);
+
+                    if($closingTokenStart === false) {
+                        // Terminal error if we can't find the end
+                        throw new Exception\TemplateParseException('No closing token found');
+                    }
+
+                    $blockContents = substr($templateContents, $nextBlockStartPos, $closingTokenStart-$nextBlockStartPos);
+
+                    $template = new LoopComponent($blockContents, $iterableVariable, $instanceVariable);
+                    $this->components[] = $template;
+                    $templateContents = substr($templateContents, $nextBlockStartPos + strlen($blockContents) + strlen($closingToken));
+                    continue 2; // while loop
+
+                default:
+                    // Treat unrecognised tokens as plain text
+                    $template = new TextComponent($token);
+                    $this->components[] = $template;
+                    $templateContents = substr($templateContents, $nextBlockStartPos);
+                    continue 2; // while loop
+            }
+
+            // failsafe if nothing above was caught, we break here to stop an infinite loop
+            break;
+        }
+    }
 
     public static function loadFromFile(string $fileName): self
     {
+        $fileName = TemplateEngine::baseDirectory() . $fileName;
         if(!file_exists($fileName)) {
             throw new FileNotFoundException($fileName);
         }
 
-        $template = new self(file_get_contents($fileName));
-        $template->baseDir = substr($fileName, 0, strrpos($fileName,'/'));
-
-        return $template;
+        return new self(file_get_contents($fileName));
     }
 
-    public function parse(array $data = []): void {
-        $templateString = $this->templateContents;
-
-        while(true) {
-            $tokenStartPos = strpos($templateString, self::DIRECTIVE_START);
-
-            // If we didn't find a directive opening, the remainder of the template is just text
-            if($tokenStartPos === false) {
-                $text = $templateString;
-            } else {
-                // Anything from the start of the template string to the first
-                // occurence of a directive opening is plain text
-                $text = substr($templateString,0,$tokenStartPos);
-            }
-
-            $textContent = new TextContent($text);
-            $this->compiledComponents[] = $textContent;
-
-            // If we found no token, we have parsed the whole template
-            if($tokenStartPos === false) {
-                break;
-            }
-
-            // Now we know we have a directive opening, we can remove any text
-            // before it then start to parse the directive itself
-            $templateString = substr($templateString, $tokenStartPos+2);
-
-            $tokenEndPos = strpos($templateString, self::DIRECTIVE_END);
-
-            // If we didn't find a directive close, that's an error
-            if($tokenEndPos === false) {
-                throw new TemplateParseException(
-                    'No directive closer found, expecting ' . self::DIRECTIVE_END
-                );
-            }
-
-            // Capture contents of the directive
-            $directive = substr($templateString, 0, $tokenEndPos);
-
-            // Remove the directive from the text waiting to be parsed
-            $templateString = substr($templateString, $tokenEndPos+2);
-
-            // handle directive we just found
-            if($directive[0] !== '@') {
-
-                // This is a simple(ish) variable replace
-                $comp = new VariableArrayContent($directive);
-                $comp->parse($data);
-                $this->compiledComponents[] = $comp;
-
-            } else {
-
-                // These are directives that need further processing
-                [$directive,$params] = explode(':', $directive, 2);
-                switch($directive) {
-                    case '@include':
-                        $this->includeFile($params, $data);
-                        break;
-
-                    case '@foreach':
-                        [$arrayVariable, $iterationVariable] = explode(':', $params);
-
-                        // Search for the end of the loop, marked with {{@foreach:variable_name}}
-                        $loopEndText = '{{'.$directive.':'.$arrayVariable.'}}';
-
-                        $tokenEndPos = strpos($templateString, $loopEndText);
-                        if($tokenEndPos === false) {
-                            throw new TemplateParseException(
-                                "Invalid loop encountered, did not find $loopEndText in template"
-                            );
-                        }
-
-                        // Verify that array actually exists
-                        if(!isset($data[$arrayVariable]) || !is_iterable($data[$arrayVariable])) {
-                            throw new TemplateParseException("Data variable $arrayVariable not found");
-                        }
-
-                        $contents = substr($templateString, 0, $tokenEndPos);
-                        $tokenEndPos += strlen($loopEndText);
-                        $templateString = substr($templateString, $tokenEndPos);
-                        foreach($data[$arrayVariable] as $temp) {
-                            $template = new Template($contents);
-                            $template->parse([$iterationVariable => $temp]);
-                            $this->compiledComponents[] = $template;
-                        }
-                        break;
-
-                    default:
-                        throw new UnrecognisedDirectiveFoundException($directive);
-                }
-            }
+    public function parse(array $data = []): self {
+        foreach($this->components as $component) {
+            $component->parse($data);
         }
+        return $this;
     }
 
-    private function includeFile(string $fileName, array $data): void
+    protected function includeFile(string $fileName, array $data): void
     {
-        $template = Template::loadFromFile($this->baseDir.'/'.$fileName);
+        $template = Template::loadFromFile($fileName);
         $template->parse($data);
         $this->compiledComponents[] = $template;
     }
 
     public function render(): string {
-        // return '';
-        // return print_r($this->compiledComponents, true);
         return array_reduce(
-            $this->compiledComponents,
+            $this->components,
             fn($carry, $component) => $carry . $component->render(),
             ''
         );

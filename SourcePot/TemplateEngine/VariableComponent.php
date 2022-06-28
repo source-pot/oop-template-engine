@@ -2,22 +2,20 @@
 
 namespace SourcePot\TemplateEngine;
 
-class VariableArrayContent implements TemplateSnippetInterface
+use InvalidArgumentException;
+
+class VariableComponent implements ComponentInterface
 {
     private array $keys;
-    private string $content;
 
     public function __construct(
-        string $content
+        private string $content
     ) { 
         $this->keys = explode('.', $content);
     }
 
-    public function parse(array $data = []): void
+    public function parse(array $data = []): self
     {
-        // Our content must be something like 'key.key.value'
-        // We need to dive into the given $data to find the value
-
         // Make sure this function is repeatable
         $keys = $this->keys;
 
@@ -29,18 +27,20 @@ class VariableArrayContent implements TemplateSnippetInterface
                 $data = $data[$key];
                 continue;
             }
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "Key $key not found in data array: " . implode(',',array_keys($data))
             );
         }
 
         if(!array_key_exists($valueKey, $data) || is_array($data[$valueKey])) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "Invalid data found for key $valueKey"
             );
         }
 
         $this->content = $data[$valueKey];
+
+        return $this;
     }
 
     public function render(): string
