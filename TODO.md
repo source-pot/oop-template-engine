@@ -9,3 +9,11 @@ Because who doesn't like a list of things to do
       The parsing is a separate process that happens later.
     * Perhaps serializing the Template instance and storing in a file with the template filename?
 4. Global data on templates - Set on TemplateEngine then have Templates merge that in when parsing
+5. Include files based on variable names. `$data['fileOfChoice' => 'template5.tpl']`,
+    `{{@include:fileOfChoice}}`
+    * Options:
+        - Put real filename in quotes, e.g. `{{@include:"template"}}`
+        - Try variable first, fallback to filename
+6. Support dot-notation arrays in foreach loops, e.g. `{{@foreach:some.nested.list:value}}` to use
+    `$data['some']['nested']['list']` as the array
+    
