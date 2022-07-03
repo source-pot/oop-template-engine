@@ -1,0 +1,10 @@
+{
+    "autoload": {
+        "psr-4": {
+            "SourcePot\\" : "./src/vendor/SourcePot"
+        }
+    },
+    "require": {
+        "phpunit/phpunit": "^9.5"
+    }
+}
