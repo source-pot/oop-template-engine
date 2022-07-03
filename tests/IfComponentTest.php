@@ -18,7 +18,6 @@ class IfComponentTest extends TestCase
 
     public function testCorrectOutputWithFalseyValue(): void
     {
-        $expectedOutput = 'test';
         $comp = new IfComponent('test', 'test');
         $var = ['test' => false];
 

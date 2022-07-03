@@ -72,7 +72,7 @@ class Template implements ComponentInterface
                     // This is a "block component" which means it has another corresponding token
                     // somewhere later in the file.  We need to find that first
                     [$iterableVariable, $instanceVariable] = explode(':',$params,2);
-                    $closingToken = TemplateEngine::TOKEN_START.'@foreach:'.$iterableVariable.TemplateEngine::TOKEN_END;
+                    $closingToken = TemplateEngine::TOKEN_START.'@endforeach:'.$iterableVariable.TemplateEngine::TOKEN_END;
                     $closingTokenStart = strpos($templateContents, $closingToken, $nextBlockStartPos);
 
                     if($closingTokenStart === false) {

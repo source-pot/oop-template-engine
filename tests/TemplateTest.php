@@ -28,10 +28,24 @@ class TemplateTest extends TestCase
 
         $this->assertEquals($expectedOutput, $output);
     }
+    
+    public function testCorrectOutputFromDecisionOnlyTemplate(): void
+    {
+        $input = '{{@if:var}}hello, world{{@endif:var}}';
+        $template = new Template($input);
+
+        $expectedOutput = 'hello, world';
+
+        $data = ['var' => true];
+
+        $output = $template->parse($data)->render();
+
+        $this->assertEquals($expectedOutput, $output);
+    }
 
     public function testCorrectOutputFromLoopOnlyTemplate(): void
     {
-        $input = '{{@foreach:vars:var}}{{var}}{{@foreach:vars}}';
+        $input = '{{@foreach:vars:var}}{{var}}{{@endforeach:vars}}';
         $template = new Template($input);
 
         $expectedOutput = '123';
