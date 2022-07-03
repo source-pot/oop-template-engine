@@ -2,8 +2,8 @@
 
 namespace SourcePot\TemplateEngine;
 
-use Exception\FileNotFoundException;
-use Exception\UnableToOpenFileException;
+use SourcePot\TemplateEngine\Exception\FileNotFoundException;
+use SourcePot\TemplateEngine\Exception\UnableToOpenFileException;
 
 class IncludeComponent implements ComponentInterface
 {
@@ -22,18 +22,33 @@ class IncludeComponent implements ComponentInterface
             return;
         }
 
-        throw new FileNotFoundException($fileName);
+        throw new FileNotFoundException($filename);
     }
 
-    private function loadFromFile(string $filename): Template
+    private function loadFromFile(string $filename): void
     {
-        $content = file_get_contents($filename);
-        if($content === false) {
-            // error loading file
-            throw new UnableToOpenFileException($filename);
+        try {
+            $content = file_get_contents($filename);
+            if($content === false) {
+                // error loading file
+                throw new UnableToOpenFileException($filename);
+            }
+        } catch(\Throwable $t) {
+            throw new UnableToOpenFileException($t->getMessage());
         }
 
         $this->content = $content;
         $this->template = new Template($content);
+    }
+
+    public function parse(array $data = []): self
+    {
+        $this->template->parse($data);
+        return $this;
+    }
+
+    public function render(): string
+    {
+        return $this->template->render();
     }
 }

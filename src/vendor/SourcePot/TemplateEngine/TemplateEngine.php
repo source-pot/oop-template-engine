@@ -22,8 +22,8 @@ class TemplateEngine
         return self::$baseDirectory;
     }
 
-    public static function loadFromFile(string $fileName): Template
+    public static function loadFromFile(string $filename): IncludeComponent
     {
-        return new IncludeComponent($fileName);
+        return new IncludeComponent($filename);
     }
 }

@@ -63,7 +63,7 @@ class Template implements ComponentInterface
 
             switch($token) {
                 case '@include':
-                    $template = TemplateEngine::loadFromFile($params);
+                    $template = new IncludeComponent($params);
                     $this->components[] = $template;
                     $templateContents = substr($templateContents, $nextBlockStartPos);
                     continue 2; // while loop

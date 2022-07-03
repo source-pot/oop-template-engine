@@ -46,4 +46,20 @@ class TemplateTest extends TestCase
 
         $this->assertEquals($expectedOutput, $output);
     }
+
+    public function testCorrectOutputFromIncludeWithTextTemplate(): void
+    {
+        $filename = 'test-template.tpl';
+        $fileContents = 'hello, world';
+        file_put_contents($filename, $fileContents);
+
+        $input = '{{@include:test-template.tpl}}';
+        $template = new Template($input);
+
+        $output = $template->parse()->render();
+
+        $this->assertEquals($fileContents, $output);
+
+        unlink($filename);
+    }
 }

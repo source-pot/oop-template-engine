@@ -19,7 +19,7 @@ class TemplateEngineTest extends TestCase
     public function testCorrectOutputWhenLoadingFromFile(): void
     {
         $input = 'hello, world';
-        $filename = 'test.tpl';
+        $filename = 'test-template-engine.tpl';
         file_put_contents($filename,$input);
 
         $template = TemplateEngine::loadFromFile($filename);
@@ -27,5 +27,7 @@ class TemplateEngineTest extends TestCase
         $output = $template->parse()->render();
 
         $this->assertEquals($input, $output);
+
+        unlink($filename);
     }
 }
