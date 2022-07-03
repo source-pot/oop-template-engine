@@ -9,5 +9,4 @@ services:
       - "./src:/var/www/src"
       - "./tests:/var/www/tests"
     working_dir: /var/www
-    # command: ["./vendor/bin/phpunit", "--testdox", "tests"]
-    tty: true
+    command: ["./vendor/bin/phpunit", "--testdox", "tests"]

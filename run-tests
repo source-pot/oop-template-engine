@@ -1,2 +1,0 @@
-clear
-docker exec template-engine-test ./vendor/bin/phpunit --testdox tests
