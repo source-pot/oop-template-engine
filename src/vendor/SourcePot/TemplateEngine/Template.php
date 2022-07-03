@@ -77,7 +77,7 @@ class Template implements ComponentInterface
 
                     if($closingTokenStart === false) {
                         // Terminal error if we can't find the end
-                        throw new Exception\TemplateParseException('No closing token found');
+                        throw new TemplateParseException('No closing token found for '.$token);
                     }
 
                     $blockContents = substr($templateContents, $nextBlockStartPos, $closingTokenStart-$nextBlockStartPos);
@@ -86,6 +86,21 @@ class Template implements ComponentInterface
                     $this->components[] = $template;
                     $templateContents = substr($templateContents, $nextBlockStartPos + strlen($blockContents) + strlen($closingToken));
                     continue 2; // while loop
+
+                case '@if':
+                    $closingToken = TemplateEngine::TOKEN_START.'@endif:'.$params.TemplateEngine::TOKEN_END;
+                    $closingTokenStart = strpos($templateContents, $closingToken, $nextBlockStartPos);
+
+                    if($closingTokenStart === false) {
+                        throw new TemplateParseException('No closing token found for '.$token);
+                    }
+
+                    $blockContents = substr($templateContents, $nextBlockStartPos, $closingTokenStart-$nextBlockStartPos);
+
+                    $template = new IfComponent($blockContents, $params);
+                    $this->components[] = $template;
+                    $templateContents = substr($templateContents, $nextBlockStartPos + strlen($blockContents) + strlen($closingToken));
+                    continue 2;
 
                 default:
                     // Treat unrecognised tokens as plain text
