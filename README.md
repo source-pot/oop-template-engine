@@ -1,6 +1,11 @@
 # oop-template-engine
 Template Engine (think Smarty or Twig) written in PHP using OOP but on a much smaller scale.
 
+## Tests
+
+Assuming you have Docker installed, just run `docker compose up` to build the testing container and
+run the test suite.
+
 ## Usage
 
 ```

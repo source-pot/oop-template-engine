@@ -1,6 +1,6 @@
 {{@foreach:sections:section}}
     <section>
-        <h2>{{section.title}}</h2>
+        <h3>{{section.title}}</h3>
         <p>{{dummyText}}</p>
     </section>
-{{@foreach:sections}}
+{{@endforeach:sections}}

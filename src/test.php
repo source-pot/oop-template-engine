@@ -12,6 +12,8 @@ try {
     $t = TemplateEngine::loadFromFile('demo.tpl');
     $t->parse([
         'pageTitle' => 'Welcome',
+        'loggedIn' => true,
+        'username' => 'Rob',
         'dummyText' => 'Lorum epson dell lenovo',
         'sections' => [
             [
